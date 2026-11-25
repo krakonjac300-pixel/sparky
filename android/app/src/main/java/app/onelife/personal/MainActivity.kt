@@ -241,7 +241,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun readHabitIntent(intent: Intent) {
-        if (intent.action == Intent.ACTION_VIEW && intent.dataString == "onelifedaybook://coach/return") {
+        if (intent.action == Intent.ACTION_VIEW && intent.dataString == "sparkyhabits://coach/return") {
             pendingHabitOpen = JSONObject().put("habitId", "").put("date", java.time.LocalDate.now().toString()).put("section", "coach")
         } else if (intent.action == OPEN_HABIT) {
             val habitId = intent.getStringExtra("habitId").orEmpty()

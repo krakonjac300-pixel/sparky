@@ -162,7 +162,7 @@ test('Android terms are reviewable before acceptance and stay accepted locally',
     await dialog.locator('summary').filter({ hasText: 'Terms of use' }).click();
     await dialog.getByRole('heading', { name: 'Sparky and wellness guidance' }).waitFor();
     await dialog.locator('summary').filter({ hasText: 'Privacy notice' }).click();
-    await dialog.getByRole('heading', { name: 'Optional connections and sharing' }).waitFor();
+    await dialog.getByRole('heading', { name: 'What OpenAI receives when you use Coach' }).waitFor();
     await button(dialog, 'I agree to the terms').click();
     await page.getByRole('navigation', { name: 'Main navigation' }).waitFor();
     await page.reload();
@@ -1817,6 +1817,8 @@ test('first run: a new user picks any number of habits with targets, reads the r
   try {
     await context.addInitScript(() => { try { localStorage.removeItem('sparky-onboarding-done'); } catch { /* storage blocked */ } });
     const page = await context.newPage();
+    // Before the 21:00 evening check, so tonight's bar is on the card.
+    await page.clock.setFixedTime(new Date(2026, 10, 25, 10, 0));
     await page.goto(url);
     const picker = page.getByRole('dialog', { name: 'Choose what Sparky holds you to' });
     await picker.waitFor();

@@ -7,11 +7,11 @@ android {
     namespace = "app.onelife.daybook"
     compileSdk = 36
     defaultConfig {
-        applicationId = "app.onelife.daybook"
+        applicationId = "app.sparky.dailyhabits"
         minSdk = 28
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 82
-        versionName = "0.40.2"
+        versionName = "0.41.0"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

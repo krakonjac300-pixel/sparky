@@ -362,7 +362,7 @@ private fun receiveCallback(server: ServerSocket, state: String, connect: (Uri) 
                 else -> "This link does not match the sign-in in progress."
             }
             runCatching {
-                val back = if (accepted || denied) "<p><a href=\"intent://coach/return#Intent;scheme=onelifedaybook;package=app.onelife.daybook;end\">Open Sparky Coach</a></p><p>You can also open Sparky from your home screen.</p>" else ""
+                val back = if (accepted || denied) "<p><a href=\"intent://coach/return#Intent;scheme=sparkyhabits;package=app.sparky.dailyhabits;end\">Open Sparky Coach</a></p><p>You can also open Sparky from your home screen.</p>" else ""
                 val page = "<!doctype html><html lang=\"en\"><meta name=\"viewport\" content=\"width=device-width\"><title>Sparky</title><body style=\"font:18px system-ui;padding:24px\"><p>$message</p>$back</body></html>"
                 val body = page.toByteArray(Charsets.UTF_8)
                 it.getOutputStream().apply {

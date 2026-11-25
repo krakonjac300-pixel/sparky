@@ -43,7 +43,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="onelifedaybook" android:host="coach" android:path="/return" />
+                <data android:scheme="sparkyhabits" android:host="coach" android:path="/return" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />

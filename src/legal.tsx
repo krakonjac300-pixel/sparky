@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Dialog } from './forms.tsx';
 import terms from '../docs/one-life-terms.md?raw';
-import privacy from '../docs/one-life-privacy.md?raw';
+import privacy from '../docs/privacy.md?raw';
 
 const agreementVersion = '2026-11-22-preview-2';
 const agreementKey = 'one-life-terms-version';

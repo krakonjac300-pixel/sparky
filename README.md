@@ -41,7 +41,7 @@ The release APK is unsigned; sign it with your own key (`zipalign` then `apksign
 
 ## Privacy and terms
 
-See [docs/one-life-privacy.md](docs/one-life-privacy.md) and [docs/one-life-terms.md](docs/one-life-terms.md).
+See the [privacy policy](docs/privacy.md) and [docs/one-life-terms.md](docs/one-life-terms.md).
 
 ## License
 
