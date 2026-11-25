@@ -1,0 +1,162 @@
+:root, :root[data-theme="light"] { font-family:-apple-system,BlinkMacSystemFont,Roboto,system-ui,sans-serif; --surface-glow:var(--surface); }
+:root { --bg:#18201c;--surface:#202a24;--surface-raised:#303e33;--text:#f0efe6;--muted:#b3bdb4;--accent:#b4d6ad;--accent-strong:#b4d6ad;--accent-wash:#303e33;--border:#39443a; }
+:root[data-theme="light"] { --bg:#faf8f2;--surface:#faf8f2;--surface-raised:#eef0e6;--text:#212d28;--muted:#5f6861;--accent:#355f4b;--accent-strong:#355f4b;--accent-ink:#fff;--accent-wash:#e7ece2;--border:#d8d9ce; }
+.topbar,.navigation { background:var(--bg);border-color:var(--border); }
+.brand-name {letter-spacing:-.035em}.brand img,.turtle-shortcut-art {display:none}
+.page-heading h1 {font-size:2.55rem;letter-spacing:-.055em;font-weight:680}
+.today-title-row>div:first-child {display:flex;flex-direction:column-reverse;gap:4px}
+.panel,.progress-panel,:root[data-theme="light"] .panel,:root[data-theme="light"] .progress-panel {box-shadow:none}
+.panel,.habit-group ul {background:var(--surface);border-color:var(--border)}
+.budget-coach.panel {background:none;border:0;padding:0;display:block}
+.daybook-feature {background:#254937;color:#faf8ec;border-radius:16px;display:flex;align-items:center;justify-content:space-between;padding:18px 24px 18px 20px;gap:8px;min-height:156px}
+.daybook-feature-copy {min-width:0;flex:1}.daybook-feature .next-action,.daybook-feature .next-habit {display:grid;justify-items:start;gap:6px;padding:0;margin:0;border:0;background:none;white-space:normal}
+.daybook-feature .next-habit-label,.daybook-feature .sparky-name {font-size:.83rem;color:#deeadb}
+.daybook-feature .next-habit-name {color:#fff;font-size:1.85rem;line-height:1.12;letter-spacing:-.04em;font-weight:650}
+.daybook-feature .next-habit-name small,.daybook-routine {color:#e6edde;font-size:.92rem}
+.daybook-feature .next-habit svg {display:none}
+.daybook-feature .secondary-button {background:#edf2dd;color:#284231;border:0;min-height:44px;margin:5px 0;border-radius:9px}
+.daybook-feature .sparky-name {display:block;margin-top:6px}.budget-coach-main {padding:12px 0;border-bottom:1px solid var(--border)}
+.budget-coach-copy {width:100%;min-width:0}.budget-coach-heading {justify-content:space-between}.budget-disclosure {width:100%;text-align:start}
+.daybook-budget-row {display:flex;align-items:center;justify-content:space-between;text-align:start;gap:16px;width:100%;min-height:48px;border-bottom:1px solid var(--border);color:var(--text)}
+.budget-coach-number {font-variant-numeric:tabular-nums;font-size:1.35rem;color:var(--accent-strong)}
+.budget-coach-actions,.sparky-score,.sparky-days {margin-top:8px}.progress-panel.progress-quiet {background:none;border:0;padding:0;margin:0;box-shadow:none}
+.habit-group ul {border-radius:0;border:0}.habit-row {border-bottom:1px solid var(--border)}.navigation {border-radius:0;box-shadow:none}
+
+dialog.focus-mode {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.focus-mode:not([open]) { display: none; }
+.focus-stage { flex-shrink: 0; }
+
+@media (max-width: 36em) {
+  .segments { display: flex; flex-wrap: wrap; }
+  .segments .secondary-button {
+    flex: 1 1 auto;
+    white-space: normal;
+    overflow: visible;
+  }
+  .segments .secondary-button[aria-pressed="true"] { background: var(--accent); }
+  .segments .segment-thumb { display: none; }
+}
+
+.history-days button { padding-inline: 0; }
+.day-ring { width: 2.125rem; height: 2.125rem; }
+
+@media (max-width: 36em) {
+  .task-sheet .category-grid { grid-template-columns: minmax(0, 1fr); }
+  .task-sheet .category-grid select {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 13em) {
+  .focus-stage { width: min(60vw, 24dvh); }
+  .history-days { grid-template-columns: repeat(auto-fit, minmax(2.125rem, 1fr)); }
+  .phone-range-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .phone-range-actions input[type="date"] { grid-column: 1 / -1; grid-row: 1; }
+}
+.navigation button > span:last-child {font-size:min(.75rem,3.3vw);overflow-wrap:normal;white-space:nowrap}
+
+/* Day progress ring on the Sparky card (the card is dark green in both themes). */
+.daybook-feature .day-count {display:flex;align-items:center;gap:7px}
+.today-ring {position:relative;display:inline-grid;place-items:center;flex:none;width:1.125rem;height:1.125rem}
+.today-ring-svg {position:absolute;inset:0;width:100%;height:100%}
+.today-ring-track {fill:none;stroke:rgba(250,248,236,.18);stroke-width:5}
+.today-ring-fill {fill:none;stroke:#b9dc8f;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.3,1,.4,1)}
+.today-ring.complete .today-ring-fill {stroke:#f2c96b}
+.today-ring.large {width:min(3.625rem,84px);height:min(3.625rem,84px)}
+.today-ring.large .today-ring-track,.today-ring.large .today-ring-fill {stroke-width:3.6}
+.today-ring.large.complete {filter:drop-shadow(0 0 10px rgba(242,201,107,.35))}
+.today-ring-check {position:relative;width:min(1.625rem,38px);height:min(1.625rem,38px);color:#f2c96b;animation:today-ring-pop .5s .35s cubic-bezier(.3,1.5,.5,1) both}
+.today-ring-count {font-size:.95rem;font-weight:650;color:#fff;font-variant-numeric:tabular-nums}
+.day-summary {display:flex;align-items:center;gap:12px}
+.day-summary-title {margin:0;color:#fff;font-size:1.3rem;line-height:1.1;letter-spacing:-.035em;font-weight:650}
+.day-summary .sparky-name {margin-top:4px}
+@keyframes today-ring-pop {from {transform:scale(.4);opacity:0} to {transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce) {
+  .today-ring-fill {transition:none}
+  .today-ring-check {animation:none}
+}
+
+/* Daily check-in: a clear saved state instead of a greyed-out button. */
+.checkin-status {display:flex;align-items:center;gap:8px;margin:0;color:var(--accent-strong);font-weight:600}
+
+/* Release polish (Nov 24): docked bottom bar, cards and fields that stand out in light theme, a streak amber that passes
+   contrast, and visible press feedback on every button. Colours checked for WCAG AA in both themes. */
+.navigation {inset:auto 0 0;width:100%;margin:0;border-width:1px 0 0;padding:4px max(8px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+:root {--field-border:#7d8a80}
+:root[data-theme="light"] {--bg:#f3f1e9;--surface:#fffdf8;--field-border:#858c82;--warm:#8a5300}
+input, select, textarea {border-color:var(--field-border)}
+button:active:not(:disabled) {filter:brightness(.93)}
+.rating-options button:active:not(:disabled), .icon-button:active:not(:disabled), .toast button:active {transform:scale(.95)}
+/* Tonight's rule on Sparky's card. */
+.daybook-feature .sparky-bar {display:block;margin-top:4px;color:#f2c96b;font-size:.8rem;font-weight:600}
+/* First-run habit picker. */
+.onboarding-habits {list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.onboarding-pick {display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 14px;border:1px solid var(--field-border);border-radius:12px;background:var(--surface);color:var(--text);font-weight:600;text-align:start}
+.onboarding-pick[aria-pressed="true"] {border-color:var(--accent);background:var(--accent-wash)}
+.onboarding-pick:disabled {opacity:.45}
+.onboarding-check {display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--field-border);color:var(--accent-ink,#fff)}
+.onboarding-pick[aria-pressed="true"] .onboarding-check {background:var(--accent);border-color:var(--accent)}
+.onboarding-target {margin:6px 0 4px 34px;font-size:.9rem}
+.onboarding-rule {margin:0;padding-left:1.1em;display:grid;gap:6px}
+/* Top bar: the smiling icon is the home button; the name already sits under the app icon, and "Sparky" on the right opens his card. */
+.brand-name {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.brand img {display:block !important;border-radius:8px}
+
+/* History and reports date bar (Nov 25): round arrows around a readable title that opens the phone's date picker. */
+.period-nav {display:flex;align-items:center;gap:8px;margin:6px 0 8px}
+.period-step {flex:none;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:50%;background:var(--surface-raised);color:var(--text)}
+.period-step:disabled {opacity:.35}
+.period-title {position:relative;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 10px;border-radius:22px;background:var(--surface);border:1px solid var(--border);font-weight:650;color:var(--text)}
+.period-title svg {flex:none;color:var(--accent-strong)}
+.period-title-text {overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.period-title .period-picker {position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;border:0;opacity:0}
+.period-today {display:block;margin:0 0 6px auto;min-height:32px}
+
+/* Week strip: even columns, the chosen day is a filled circle the same size as the others, nothing sticks out. */
+.history-days {gap:2px;margin:2px 0 14px;max-width:none}
+.history-days button, .history-days button[aria-pressed="true"] {background:none;border:0;min-height:0;padding:6px 0 4px;border-radius:14px;display:grid;justify-items:center;gap:4px;color:var(--muted);font-size:.72rem;box-shadow:none}
+.history-days button:disabled {opacity:.4}
+.history-days .day-ring {width:min(2.25rem,11vw);height:min(2.25rem,11vw)}
+.history-days .day-ring strong {font-size:min(.95rem,4.4vw);color:var(--text)}
+.history-days button[aria-pressed="true"] {color:var(--accent-strong);font-weight:700}
+.history-days button[aria-pressed="true"] .day-ring {background:var(--accent);border-radius:50%}
+.history-days button[aria-pressed="true"] .day-ring strong {color:var(--accent-ink,#fff)}
+.history-days .entry-dot {width:5px;height:5px;border-radius:50%}
+
+/* History rows: name and notes on the left, status and Edit on the right. */
+.history-row {display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.history-row-main {min-width:0}
+.history-row-side {flex:none;display:grid;justify-items:end;gap:2px;text-align:end}
+.history-status {font-size:.85rem;color:var(--accent-strong);font-weight:600}
+.history-row-side .text-button {min-height:32px;padding:0;font-size:.85rem}
+
+/* Reports (Nov 25): period choices on two even rows instead of a row cut off at the edge; on-palette bars. */
+.periods:not(.segments) {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;width:100%}
+.periods:not(.segments) .secondary-button {min-width:0;padding-inline:4px;white-space:nowrap}
+.report-areas progress {appearance:none;-webkit-appearance:none;height:8px;border:0;border-radius:4px;background:var(--surface-raised);overflow:hidden}
+.report-areas progress::-webkit-progress-bar {background:var(--surface-raised);border-radius:4px}
+.report-areas progress::-webkit-progress-value {background:var(--accent);border-radius:4px}
+.report-areas progress::-moz-progress-bar {background:var(--accent);border-radius:4px}
+.report-bars span {background:linear-gradient(to top, var(--accent) calc(var(--fill) * 100%), var(--accent-wash) 0)}
+.heatmap button {border-radius:5px}
+
+/* Four-tab switchers at large text: an even 2 x 2 grid instead of one tab alone on a second row. */
+@media (max-width: 20em) {
+  .segments.segments-4 {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .segments.segments-4 .segment-thumb {display:none}
+  .segments.segments-4 .secondary-button[aria-pressed="true"] {background:var(--accent);color:var(--accent-ink,#fff);border-radius:10px}
+}
+/* Large text on small phones: the date title wraps instead of being cut off. */
+.period-title-text {white-space:normal;text-align:center;line-height:1.2;overflow:visible}

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+test-results/
+android/.gradle/
+android/app/build/
+android/local.properties
+*.apk
+*.idsig
+*.keystore
+*.jks
+*.p12
+.env*

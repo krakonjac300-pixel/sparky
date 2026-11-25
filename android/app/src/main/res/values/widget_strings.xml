@@ -1,0 +1,16 @@
+<resources>
+    <string name="widget_title">Sparky</string>
+    <string name="widget_description">See your next habit and what’s still open today.</string>
+    <string name="widget_next_title">Next habit</string>
+    <string name="widget_next_description">See the next habit and tap to log it.</string>
+    <string name="widget_budget_title">App budget</string>
+    <string name="widget_budget_description">See the time remaining in your daily app budget.</string>
+    <string name="widget_sparky_title">Sparky</string>
+    <string name="widget_sparky_description">Sparky\'s mood for today. One square or bigger.</string>
+    <string name="widget_count_title">Habits today</string>
+    <string name="widget_count_description">Habits done today, as small as one square.</string>
+    <string name="widget_streak_title">Streak</string>
+    <string name="widget_streak_description">Your streak flame, and Sparky when it needs saving.</string>
+    <string name="widget_list_title">Today checklist</string>
+    <string name="widget_list_description">Tap to finish habits without opening the app.</string>
+</resources>
