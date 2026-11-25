@@ -42,3 +42,7 @@ The release APK is unsigned; sign it with your own key (`zipalign` then `apksign
 ## Privacy and terms
 
 See [docs/one-life-privacy.md](docs/one-life-privacy.md) and [docs/one-life-terms.md](docs/one-life-terms.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE). Sparky's artwork and name are included for this app; please give your own fork its own mascot and name.
