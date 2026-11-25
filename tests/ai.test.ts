@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { calendarDate, parseBackup, shiftDate, starterData, writeLog, type AppData } from '../src/model.ts';
-import { chatContext, chatContextLength, keptSummaries, maxMessageLength, optionalAiData, pickModel, rememberSummary, summaryPrompt } from '../src/ai.ts';
+import { chatContext, chatContextLength, keptSummaries, maxMessageLength, optionalAiData, pickModel, rememberSummary, reportLink, summaryPrompt, supportEmail } from '../src/ai.ts';
 
 const models = [{ id: 'gpt-a', name: 'A' }, { id: 'gpt-b', name: 'B' }];
 
@@ -94,4 +94,13 @@ test('Sparky remembers past summaries, keeps the newest 60, and shows them to th
     assert.ok(!prompt.includes('Advice number 61'), 'only the last 3 go back to the AI');
   }
   assert.match(summaryPrompt(data, today, 7, 'Week'), /Since your last review/);
+});
+
+test('Report answer opens a prefilled email to Sparky support with the question and answer', () => {
+  const link = reportLink('Why did I miss?', 'Because & you slept.');
+  assert.ok(link.startsWith(`mailto:${supportEmail}?subject=`));
+  const body = decodeURIComponent(link.split('&body=')[1]);
+  assert.match(body, /Question: Why did I miss\?/);
+  assert.match(body, /Answer: Because & you slept\./);
+  assert.ok(reportLink('q', 'x'.repeat(5000)).length < 5000, 'long answers are cut so the link stays usable');
 });

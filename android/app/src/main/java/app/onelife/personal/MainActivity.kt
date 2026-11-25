@@ -191,6 +191,8 @@ class MainActivity : ComponentActivity() {
                 val uri = request.url
                 if (uri.scheme == "https" && uri.host == APP_HOST) return false
                 if (request.isForMainFrame && uri.scheme == "https") runCatching { startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+                // "Report answer" in Coach opens the user's email app (Google Play AI-content policy).
+                if (uri.scheme == "mailto") runCatching { startActivity(Intent(Intent.ACTION_SENDTO, uri)) }
                 return true
             }
         }

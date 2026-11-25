@@ -242,3 +242,15 @@ export function chatContext(data: AppData, today: string) {
   return 'Here is what is going on in my Sparky habit app, from the records I chose to share:\n\n'
     + appContext(data, today, 30, 'Month', chatContextLength);
 }
+
+/** Google Play requires a way to report AI answers to the developer: a prefilled email to Sparky support. */
+export const supportEmail = 'sparkyhabits@proton.me';
+export function reportLink(question: string, answer: string) {
+  const body = `What is wrong with this answer?
+
+
+---
+Question: ${question.slice(0, 500)}
+Answer: ${answer.slice(0, 1500)}`;
+  return `mailto:${supportEmail}?subject=${encodeURIComponent('Sparky: reported Coach answer')}&body=${encodeURIComponent(body)}`;
+}

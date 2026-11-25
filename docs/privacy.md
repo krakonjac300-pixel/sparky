@@ -6,7 +6,7 @@ This policy explains what the Android app Sparky (package app.sparky.dailyhabits
 
 ## Who we are
 
-Sparky is published by the developer of Sparky ("we", "us"). You can contact us through the support email shown in Sparky's Google Play listing. We do not run a server for Sparky, so we do not receive, store or see your habit records.
+Sparky is published by the developer of Sparky ("we", "us"). You can contact us at sparkyhabits@proton.me. We do not run a server for Sparky, so we do not receive, store or see your habit records.
 
 ## The short version
 
@@ -137,7 +137,7 @@ Records stay in Sparky's private app storage. ChatGPT tokens are encrypted with 
 
 ## Your rights
 
-Because your data is on your phone, you can view, correct, export and delete it yourself at any time. If you have a question or want to exercise a privacy right under the law that applies to you, contact us through the support email in the Google Play listing. You can also contact your local data protection authority.
+Because your data is on your phone, you can view, correct, export and delete it yourself at any time. If you have a question or want to exercise a privacy right under the law that applies to you, contact us at sparkyhabits@proton.me. You can also contact your local data protection authority.
 
 ## Changes to this policy
 

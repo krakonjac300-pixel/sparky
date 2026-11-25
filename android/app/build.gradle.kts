@@ -10,8 +10,8 @@ android {
         applicationId = "app.sparky.dailyhabits"
         minSdk = 28
         targetSdk = 36
-        versionCode = 82
-        versionName = "0.41.0"
+        versionCode = 83
+        versionName = "0.41.1"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

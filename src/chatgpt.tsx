@@ -7,7 +7,7 @@ import { newId, type AppData } from './model.ts';
 import type { Commit } from './expansion.tsx';
 import { chatAtRisk, chatTitle, deleteChat, exportTranscript, maxChats, maxTurns, ownedChats, saveChatTurn, type SavedChat } from './chat-history.ts';
 import { privateCoachCommit } from './coach-private.ts';
-import { askChatGpt, chatContext, invalidateWeeklyChoice, optionalAiData, setModelOwner, weeklyAiRequest, type ChatMessage } from './ai.ts';
+import { askChatGpt, chatContext, invalidateWeeklyChoice, optionalAiData, setModelOwner, weeklyAiRequest, type ChatMessage, reportLink } from './ai.ts';
 
 type Account = { authorized: boolean; owner?: string; registered: boolean; email: string; accounts: { id: string; email: string }[] };
 type CoachProps = { data: AppData; today: string; commit: Commit; active: () => boolean };
@@ -290,7 +290,8 @@ function ChatSession({ data, today, commit, active, verified, account, connectio
       </li>)}</ul>}
       {turns.length > 0 && <ol className="chat-turns" aria-label="Conversation">{turns.map((turn, index) => <li key={index}>
         <p className="chat-question"><strong>You</strong><span>{turn.question}</span></p>
-        <div className="chat-answer"><strong>ChatGPT</strong><AiText text={turn.answer} compact /></div>
+        <div className="chat-answer"><strong>ChatGPT</strong><AiText text={turn.answer} compact />
+          <a className="text-button report-answer" href={reportLink(turn.question, turn.answer)}>Report answer</a></div>
       </li>)}</ol>}
       {chatId && turns.length > 0 && <button className="text-button danger-text chat-delete" disabled={!!busy} onClick={() => {
         const id = chatId;
