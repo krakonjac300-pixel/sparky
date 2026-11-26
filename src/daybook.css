@@ -140,7 +140,7 @@ button:active:not(:disabled) {filter:brightness(.93)}
 .history-row-main {min-width:0}
 .history-row-side {flex:none;display:grid;justify-items:end;gap:2px;text-align:end}
 .history-status {font-size:.85rem;color:var(--accent-strong);font-weight:600}
-.history-row-side .text-button {min-height:32px;padding:0;font-size:.85rem}
+.history-row-side .text-button {min-height:44px;padding:0;font-size:.85rem}
 
 /* Reports (Nov 25): period choices on two even rows instead of a row cut off at the edge; on-palette bars. */
 .periods:not(.segments) {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;width:100%}
@@ -201,3 +201,7 @@ button:active:not(:disabled) {filter:brightness(.93)}
 .program-tips[open] summary::after {transform:rotate(-135deg) translateY(-2px)}
 @media (prefers-reduced-motion: reduce) {.program-tips summary::after {transition:none}}
 .daybook-feature .card-steps {display:flex;align-items:center;gap:6px;margin-top:8px;color:#e6edde;font-size:.9rem;font-variant-numeric:tabular-nums}
+/* Comfortable tap targets (44px) for the header logo, "Back to today" and the collapsible rows. */
+.brand {min-width:44px;justify-content:center}
+.period-today {min-height:44px}
+details.audit > summary, .sparky-score summary, .past-summaries summary, .phone-app-more summary {min-height:44px;display:list-item;padding-block:10px;box-sizing:border-box}
