@@ -53,7 +53,7 @@ function permittedTime(time: string | undefined, controls: AppData['reminderCont
 
 export function learnedReminderText(routine: string | undefined, lead: number, controls?: AppData['reminderControls']) {
   if (controls?.disabled) return 'Habit reminders are turned off in Settings.';
-  if (!routine) return 'Learning from your check-ins. Reminders start after at least three days with a consistent finish time.';
+  if (!routine) return `Learning from your check-ins. Until then Sparky checks at ${learningReminder} if it is still open.`;
   const time = beforeRoutine(routine, lead);
   const prefix = `Usually logged around ${routine}.`;
   if (!permittedTime(time, controls)) {
@@ -62,6 +62,18 @@ export function learnedReminderText(routine: string | undefined, lead: number, c
   const [hour, minute] = routine.split(':').map(Number);
   const detail = hour * 60 + minute < lead ? ' The reminder stays on the scheduled day, so the lead is shorter.' : '';
   return `${prefix} Reminder at ${time} on scheduled days.${detail}`;
+}
+
+/** Minutes before the usual finish time when Sparky reminds, for habits with no reminder of their own. */
+export const adaptiveLead = 30;
+/** Until Sparky has learned when a habit usually gets done, he checks on it once in the late afternoon. */
+export const learningReminder = '18:00';
+
+/** The lead Sparky uses for a habit: its own choice, or the adaptive default when it has no fixed time. */
+export function reminderLead(habit: Habit, data: AppData) {
+  if (habit.learnedLead) return habit.learnedLead;
+  if (habit.reminderTime || data.reminder || habit.onceOn || habit.trackingType === 'avoid') return undefined;
+  return adaptiveLead;
 }
 
 export function reminderPlan(data: AppData, today: string) {
@@ -78,8 +90,9 @@ export function reminderPlan(data: AppData, today: string) {
   const daily = new Map((data.priorities ?? []).map((day) => [day.date, day.items]));
   return [...data.habits].sort((a, b) => a.sortOrder - b.sortOrder).flatMap((habit) => {
     if (habit.archivedAt) return [];
-    const routine = habit.learnedLead && suggestedReminder(data, habit.id, today);
-    const time = permitted(habit.learnedLead ? (routine ? beforeRoutine(routine, habit.learnedLead) : undefined)
+    const lead = reminderLead(habit, data);
+    const routine = lead && suggestedReminder(data, habit.id, today);
+    const time = permitted(lead ? (routine ? beforeRoutine(routine, lead) : learningReminder)
       : habit.reminderTime ?? data.reminder);
     const extraTime = permitted(habit.extraReminderTime);
     const dates = (logs.get(habit.id) ?? []).filter((log) => accountedFor(habit, log,
@@ -93,7 +106,7 @@ export function reminderPlan(data: AppData, today: string) {
         .map((item) => item.date) : undefined,
       priorityDates: (data.priorities ?? []).filter((day) => day.date >= today && day.items.some((item) => item.habitId === habit.id)).map((day) => day.date),
     };
-    return [{ ...rule, kind: 'habit', message: undefined as string | undefined }, ...(habit.replacement?.time
+    return [{ ...rule, kind: 'habit', message: (routine ? `You usually finish this around ${routine}.` : undefined) as string | undefined }, ...(habit.replacement?.time
       ? [{ ...rule, kind: 'replacement', time: permitted(habit.replacement.time), extraTime: undefined, message: habit.replacement.action }] : [])];
   });
 }

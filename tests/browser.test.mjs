@@ -81,14 +81,14 @@ test('a Health Connect goal completion and correction both refresh the Android r
   } finally { await context.close(); }
 });
 
-test('Today shows Sparky above the next habit and opens a pinned exercise after reload', { timeout: 30000 }, async () => {
+test('Today shows Sparky above the habits and opens a pinned exercise after reload', { timeout: 30000 }, async () => {
   const context = await browser.newContext(phone);
   try {
     const page = await context.newPage();
     await page.goto(url);
     await page.locator('#budget-coach').waitFor();
     assert.ok(await page.locator('#budget-coach').evaluate((coach) =>
-      coach.compareDocumentPosition(document.querySelector('.next-action')) & Node.DOCUMENT_POSITION_FOLLOWING));
+      coach.compareDocumentPosition(document.querySelector('.habits-section')) & Node.DOCUMENT_POSITION_FOLLOWING));
     await button(page, 'Life').click();
     await button(page, 'Programs').click();
     await button(page, 'Build confidence').click();
@@ -560,12 +560,12 @@ test('skipping or missing a session offers a smaller step in the regular habit l
   }
 });
 
-test('Up next offers a one-tap target and celebrates each new completion', { timeout: 25000 }, async () => {
+test('a habit row offers a one-tap target and celebrates each new completion', { timeout: 25000 }, async () => {
   const context = await browser.newContext(phone);
   try {
     const page = await context.newPage();
     await page.goto(url);
-    await button(page, 'Up next Read').click();
+    await button(page, 'Read').click();
     assert.equal(await page.getByLabel('Amount (min)').inputValue(), '20');
     await button(page, 'Log 20 min').click();
     const celebration = page.getByRole('status').filter({ hasText: '20 min · Target reached' });
@@ -574,7 +574,6 @@ test('Up next offers a one-tap target and celebrates each new completion', { tim
     const check = celebration.locator('.completion-check');
     assert.equal(await circle.evaluate((element) => getComputedStyle(element).animationName), 'draw-completion');
     assert.equal(await check.evaluate((element) => getComputedStyle(element).animationDelay), '0.14s');
-    await button(page, 'Up next Move or train').waitFor();
 
     await button(page, 'Read').click();
     await page.getByLabel('Note').fill('Finished a chapter.');
@@ -583,7 +582,7 @@ test('Up next offers a one-tap target and celebrates each new completion', { tim
     assert.equal(await page.locator('.completion-mark').count(), 0);
 
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await button(page, 'Up next Move or train').click();
+    await button(page, 'Move or train').click();
     await button(page, 'Log 20 min').click();
     await celebration.waitFor();
     assert.equal(await circle.evaluate((element) => getComputedStyle(element).animationName), 'none');
@@ -984,7 +983,8 @@ test('a shared limit drives the turtle, reset, widget controls and past results'
     await page.clock.runFor(2600);
     await page.screenshot({path: '_work/daybook-native/budget-example.png', animations: 'disabled'});
     await text(turtle, '10 min over your TikTok limit.');
-    assert.equal(await turtle.getAttribute('data-pose'), 'disappointed');
+    await turtle.getByText(/That counts as one missed habit./).waitFor();
+    assert.equal(await turtle.getAttribute('data-pose'), 'ready', 'going over is one missed habit, judged in the evening');
     await button(turtle, 'Budget coach settings').click();
     const settings = page.getByRole('dialog', { name: 'Budget coach settings' });
     await settings.getByLabel('My reset after going over').fill('Take a short walk.');
@@ -996,11 +996,10 @@ test('a shared limit drives the turtle, reset, widget controls and past results'
     await page.evaluate(() => sessionStorage.setItem('laterUsage', 'true'));
     await page.clock.fastForward(60 * 60 * 1000);
     await text(turtle, '6 min over');
-    assert.equal(await turtle.getAttribute('data-pose'), 'disappointed');
+    assert.equal(await turtle.getAttribute('data-pose'), 'ready');
     await text(turtle, 'Take a short walk.');
     await button(turtle, 'I did my reset').click();
     await text(turtle, 'You followed through on your reset.');
-    assert.equal(await turtle.getAttribute('data-pose'), 'disappointed');
 
     await open(page, 'Life');
     await text(limits, '3 h 6 min used');
@@ -1203,7 +1202,7 @@ test('daily priorities, flexible sessions, replacement plans, and phone actions 
     await button(page, 'Save priorities').click();
     await text(page.locator('#today-plan'), 'After coffee');
     await text(page, 'Today’s minimum · 5 min');
-    await button(page, 'Up next Read After coffee').click();
+    await button(page, 'Read').click();
     await button(page, 'Log 5 min').waitFor();
     await page.keyboard.press('Escape');
 
@@ -1707,47 +1706,27 @@ test('returning from the browser opens Sparky Coach and reads the saved account 
   } finally { await context.close(); }
 });
 
-test('the Sparky card shows a day ring that turns into a gold check once everything is done', { timeout: 60000 }, async () => {
+test('the Sparky card shows today’s ring behind Sparky and the count below him', { timeout: 30000 }, async () => {
   const context = await browser.newContext({ ...phone, reducedMotion: 'reduce' });
   try {
     const page = await context.newPage();
     await page.goto(url);
     const card = page.locator('.daybook-feature');
-    await card.locator('.next-habit').waitFor();
-    // While a habit is up next, a small ring sits beside the count.
-    await card.locator('.day-count .today-ring').waitFor();
-    assert.equal(await card.locator('.today-ring.large').count(), 0);
-    for (let i = 0; i < 20; i++) {
-      const mark = card.getByRole('button', { name: 'Mark done' });
-      const next = card.locator('.next-habit');
-      if (await mark.count()) await mark.click();
-      else if (await next.count()) await next.click();
-      else break;
-      await page.waitForTimeout(300);
-      const dialog = page.getByRole('dialog');
-      if (await dialog.count()) {
-        const save = dialog.getByRole('button', { name: /save|done|log/i }).first();
-        if (await save.count()) await save.click(); else await page.keyboard.press('Escape');
-        await page.waitForTimeout(300);
-      }
-    }
-    // Nothing is up next, but Small wins are still open: the big ring shows the fraction instead of a blank card.
-    await card.getByText('Almost there').waitFor();
-    assert.match(await card.locator('.today-ring-count').innerText(), /^\d+\/\d+$/);
-    await button(page, 'Small wins').first().click();
-    for (let i = 0; i < 40; i++) {
-      const tap = page.locator('.win-tap[aria-pressed="false"]').first();
-      if (!await tap.count()) break;
-      await tap.click();
-      await page.waitForTimeout(150);
-    }
-    await button(page, 'Habits').first().click();
-    await card.getByText('All done!').waitFor();
-    await card.locator('.today-ring.large.complete .today-ring-check').waitFor();
-    const ring = await card.locator('.today-ring.large').boundingBox();
-    const check = await card.locator('.today-ring-check').boundingBox();
-    assert.ok(check.width < ring.width / 2, 'the check sits inside the ring');
-    assert.match(await card.innerText(), /(\d+) of \1 done today/);
+    const stage = card.locator('.sparky-stage');
+    await stage.locator('.sparky-ring').waitFor();
+    assert.equal(await card.locator('.next-habit').count(), 0, 'Up next is gone from the card');
+    const count = card.locator('.inline-sparky .day-count');
+    const [before, total] = (await count.innerText()).match(/(\d+) of (\d+) done today/).slice(1).map(Number);
+    assert.equal(before, 0);
+    assert.equal(await stage.locator('.sparky-ring-fill').count(), 0);
+    const ring = await stage.locator('.sparky-ring').boundingBox();
+    const turtle = await stage.locator('.budget-turtle').boundingBox();
+    assert.ok(turtle.width > 80 && Math.abs((ring.x + ring.width / 2) - (turtle.x + turtle.width / 2)) < 2, 'Sparky sits centred in the ring');
+    assert.ok((await count.boundingBox()).y >= turtle.y + turtle.height - 1, 'the count sits below Sparky');
+    await page.getByRole('button', { name: 'Complete Gratitude' }).click();
+    await text(count, `1 of ${total} done today`);
+    await stage.locator('.sparky-ring-fill').waitFor();
+    assert.equal(await stage.locator('.sparky-ring.complete').count(), 0);
     // History keeps its own day rings at their original size.
     await open(page, 'History');
     const historyRing = await page.locator('.day-ring').first().boundingBox();

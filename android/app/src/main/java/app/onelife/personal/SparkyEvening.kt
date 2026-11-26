@@ -66,9 +66,10 @@ object SparkyEvening {
         val score = if (total > 0) "$done of $total habits done." else "No habits were due today."
         return when (summary.optString("pose")) {
             "proud" -> "Sparky is proud of you" to "$score Great day. Keep it going tomorrow."
-            "so-so" -> "Sparky says: good, not great" to "$score$open There's still time tonight."
+            "so-so" -> "Sparky says: good, not great" to
+                (if (overLimit.isNotBlank()) "$score Going over your $overLimit limit counts as one miss.$open" else "$score$open There's still time tonight.")
             "disappointed" -> "Sparky is disappointed" to
-                (if (overLimit.isNotBlank()) "You went well over your $overLimit limit. $score$open" else "$score$open One small step tonight still counts.")
+                (if (overLimit.isNotBlank()) "$score Going over your $overLimit limit counts as one miss.$open" else "$score$open One small step tonight still counts.")
             else -> "Sparky's evening check" to "$score$open"
         }
     }
@@ -85,14 +86,12 @@ internal fun postEvening(context: Context, today: LocalDate, refreshOnly: Boolea
     val previous = if (refreshOnly) {
         manager.activeNotifications.firstOrNull { it.tag == tag && it.id == notificationId }?.notification ?: return
     } else null
-    val summary = SparkyEvening.summary(context)
-    if (summary?.optBoolean("streakPaused") == true) {
+    val saved = SparkyEvening.summary(context)
+    if (saved?.optBoolean("streakPaused") == true) {
         if (previous != null) manager.cancel(tag, notificationId)
         return
     }
-    if (summary?.optString("date") == today.toString()) {
-        freshOverLimit(context)?.let { summary.put("pose", "disappointed").put("overLimit", it) }
-    }
+    val summary = if (saved?.optString("date") == today.toString()) withFreshLimit(saved, freshOverLimit(context)) else saved
     val (title, text) = SparkyEvening.message(summary, today, scorePending(context, today))
     if (previous?.extras?.getCharSequence(Notification.EXTRA_TITLE) == title &&
         previous.extras.getCharSequence(Notification.EXTRA_TEXT) == text) return

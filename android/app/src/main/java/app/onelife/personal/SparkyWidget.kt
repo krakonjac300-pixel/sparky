@@ -18,24 +18,25 @@ private fun dayStatus(context: Context): DayStatus {
     if (scorePending(context, LocalDate.now())) {
         return DayStatus(0, 0, R.array.sparky_frames_ready, "Score pending", false, pending = true)
     }
-    val summary = SparkyEvening.summary(context)
-    if (summary?.optBoolean("streakPaused") == true) {
+    val saved = SparkyEvening.summary(context)
+    if (saved?.optBoolean("streakPaused") == true) {
+        val summary = saved
         val fresh = summary.optString("date") == LocalDate.now().toString()
         return DayStatus(summary.optInt("done"), summary.optInt("total"), R.array.sparky_frames_ready, "Scoring paused", fresh)
     }
-    if (summary == null || summary.optString("date") != LocalDate.now().toString()) {
+    if (saved == null || saved.optString("date") != LocalDate.now().toString()) {
         return DayStatus(0, 0, R.array.sparky_frames_ready, "Open to check in", false)
     }
+    val summary = withFreshLimit(saved, freshOverLimit(context))
     val done = summary.optInt("done")
     val total = summary.optInt("total")
     // Older summaries have no "open"; then everything not done counts as open.
     val open = summary.optInt("open", total - done)
     val reviewTime = LocalTime.now().hour >= summary.optInt("hour", 21)
-    val over = summary.optString("overLimit").isNotBlank() || freshOverLimit(context) != null
-    // Before the evening check Sparky only reacts to wins and big overages, so mornings never start disappointed.
+    val over = summary.optString("overLimit").isNotBlank()
+    // Before the evening check Sparky only reacts to wins; an app limit counts as one habit like any other.
     val pose = when {
-        reviewTime -> if (over) "disappointed" else summary.optString("pose")
-        over -> "disappointed"
+        reviewTime -> summary.optString("pose")
         summary.has("livePose") -> summary.optString("livePose")
         total > 0 && done >= total -> "proud"
         else -> "ready"

@@ -303,11 +303,13 @@ for (const [width, size, theme] of [[375, 16, 'Light'], [375, 32, 'Light'], [375
   });
 }
 
-test('the day ring beside the count grows with enlarged text', async t => {
+test('Sparky and the count under him stay inside the card with enlarged text', async t => {
   for (const size of [16, 32]) {
     const { page } = await phone(t, 375, size);
-    const ring = await page.locator('.daybook-feature .day-count .today-ring').boundingBox();
-    // 1.125rem: 18 px at normal text, 36 px at 200%, so it keeps pace with the "x of y done today" text.
-    assert.ok(Math.abs(ring.width - size * 1.125) < 1, `ring is ${ring.width}px at ${size}px text`);
+    const card = await page.locator('.daybook-feature').boundingBox();
+    const count = await page.locator('.daybook-feature .inline-sparky .day-count').boundingBox();
+    const turtle = await page.locator('.daybook-feature .budget-turtle').boundingBox();
+    assert.ok(turtle.width >= 100, `Sparky is ${turtle.width}px at ${size}px text`);
+    assert.ok(count.x >= card.x && count.x + count.width <= card.x + card.width + 1, `count fits at ${size}px text`);
   }
 });

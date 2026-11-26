@@ -131,7 +131,7 @@ class ReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val replacement = rule.kind == "replacement"
         val headline = if (replacement) "Your replacement plan" else if (rule.avoid) "Check in on your Break List" else "Still open: ${rule.title}"
-        val content = if (replacement) rule.message ?: rule.title else if (rule.avoid) "Log your outcome for ${rule.title}" else rule.title
+        val content = if (replacement) rule.message ?: rule.title else if (rule.avoid) "Log your outcome for ${rule.title}" else rule.message ?: rule.title
         val notification = Notification.Builder(context, CHANNEL).setSmallIcon(android.R.drawable.ic_menu_today)
             .setContentTitle(headline).setContentText(content).setStyle(Notification.BigTextStyle().bigText(content))
             .setVisibility(Notification.VISIBILITY_PRIVATE).setContentIntent(open).setAutoCancel(true).setGroup("sparky.habit-reminders")

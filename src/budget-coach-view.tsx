@@ -1,6 +1,6 @@
 import { checkAppLimit } from './app-limits.ts';
 import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
-import { Bell, Check, ChevronRight, Settings2 } from 'lucide-react';
+import { Bell, ChevronRight, Settings2 } from 'lucide-react';
 import { androidRequest, isAndroidAppPage, onAndroid } from './android.ts';
 import { activeBudgets, budgetCoachStatus, dailyTurtleReaction, sparkyBar, sparkyHistory, sparkyResetHour, sparkyTarget, turtleHabitProgress } from './budget-coach.ts';
 import { type Commit } from './expansion.tsx';
@@ -11,37 +11,18 @@ import { TurtleAvatar } from './turtle-avatar.tsx';
 import { defaultTurtleReviewHour } from './turtle-review.ts';
 
 import { carryHabit } from './evening-plan.ts';
-import { timeAgo } from './friendly.ts';
 import { EveningSuggestion } from './evening-suggestion.tsx';
 
 const defaultReset = 'Put the phone down for 10 minutes.';
 
-/** The day's progress as a ring: full and gold with a check once everything due today is done. */
-function DayRing({ done, total, large }: { done: number; total: number; large?: boolean }) {
+/** Today's progress as a ring drawn behind Sparky: it fills as habits get done and turns gold once all are. */
+function SparkyRing({ done, total }: { done: number; total: number }) {
   const share = total ? Math.min(1, done / total) : 0;
-  const complete = total > 0 && done >= total;
-  return <span className={`today-ring${large ? ' large' : ''}${complete ? ' complete' : ''}`} aria-hidden="true">
-    <svg className="today-ring-svg" viewBox="0 0 40 40">
-      <circle className="today-ring-track" cx="20" cy="20" r="16" />
-      {share > 0 && <circle className="today-ring-fill" cx="20" cy="20" r="16" pathLength="1" strokeDasharray="1"
-        strokeDashoffset={1 - share} transform="rotate(-90 20 20)" />}
-    </svg>
-    {large && (complete ? <Check className="today-ring-check" strokeWidth={3} /> : <span className="today-ring-count">{done}/{total}</span>)}
-  </span>;
-}
-
-/** Left side of the Sparky card: the next habit with a small ring, or a summary of the day once nothing is up next. */
-export function DayProgress({ done, total, bar, children }: { done: number; total: number; bar?: string; children?: ReactNode }) {
-  const count = <span className="sparky-name day-count"><DayRing done={done} total={total} />{done} of {total} done today</span>;
-  const rule = bar && <span className="sparky-bar">{bar}</span>;
-  if (children) return <>{children}{count}{rule}</>;
-  const complete = total > 0 && done >= total;
-  const title = complete ? 'All done!' : total ? 'Almost there' : 'Nothing due today';
-  return <div className="day-summary">
-    <DayRing done={done} total={total} large />
-    <div><p className="day-summary-title">{title}</p>
-      <span className="sparky-name">{total ? `${done} of ${total} done today` : 'Enjoy the rest day'}</span>{rule}</div>
-  </div>;
+  return <svg className={`sparky-ring${total > 0 && done >= total ? ' complete' : ''}`} viewBox="0 0 120 120" aria-hidden="true">
+    <circle className="sparky-ring-track" cx="60" cy="60" r="54" />
+    {share > 0 && <circle className="sparky-ring-fill" cx="60" cy="60" r="54" pathLength="1" strokeDasharray="1"
+      strokeDashoffset={1 - share} transform="rotate(-90 60 60)" />}
+  </svg>;
 }
 
 function timeLabel(seconds: number) {
@@ -74,8 +55,8 @@ function useBeforeHour(hour: number, today: string) {
   return before;
 }
 
-export function BudgetCoach({ data, today, focus, children, afterCard, commit, openGoals, reviewing, sync, openActivity }: {
-  focus?: string; children?: ReactNode; afterCard?: ReactNode;
+export function BudgetCoach({ data, today, focus, afterCard, commit, openGoals, reviewing, sync, openActivity }: {
+  focus?: string; afterCard?: ReactNode;
   data: AppData; today: string; commit: Commit; openGoals: () => void; reviewing: boolean;
   sync: PhoneSync; openActivity: () => void;
 }) {
@@ -106,6 +87,7 @@ export function BudgetCoach({ data, today, focus, children, afterCard, commit, o
   const members = selected ? selected.change.apps ?? [selected.limit] : usageToday?.apps ?? [];
   const ring = turtleHabitProgress(data, today);
   const paused = scoringPaused(data, today);
+  const bar = reviewing || paused ? undefined : sparkyBar(ring.done, ring.total, data.budgetCoach?.reviewHour ?? defaultTurtleReviewHour);
   const headline = paused ? 'Scoring is paused' : pose === 'proud' ? 'Proud of you!' : reaction.weeklyShort && reaction.done === reaction.total && reaction.total > 0 && pose === 'so-so' ? (reaction.date === today ? 'Every daily goal done today!' : 'Every daily goal done yesterday!') : pose === 'so-so' ? 'Making progress' : pose === 'disappointed' ? 'Let\'s turn today around'
     : ring.total && ring.done >= ring.total ? 'All done. Amazing!' : ring.done ? 'Nice start, keep going' : 'Let\'s make today count';
 
@@ -149,30 +131,38 @@ export function BudgetCoach({ data, today, focus, children, afterCard, commit, o
   }
 
   return <section id="budget-coach" tabIndex={-1} className="panel budget-coach" data-pose={pose} data-over={over || undefined} aria-labelledby="budget-coach-title">
-    <div className="daybook-feature">
-      <div className="daybook-feature-copy"><DayProgress done={ring.done} total={ring.total} bar={reviewing || paused ? undefined : sparkyBar(ring.done, ring.total, data.budgetCoach?.reviewHour ?? defaultTurtleReviewHour)}>{children}</DayProgress></div>
+    <div className="daybook-feature" data-over={over || undefined}>
+      <div className="daybook-feature-copy">
+        {status ? <>
+          <span className="screen-label">{status.plan.name} today</span>
+          <span className="screen-number">{progress ? progress.remaining === 0 ? 'At your limit' : `${timeLabel(Math.abs(progress.remaining))} ${over ? 'over' : 'left'}` : 'Not counted yet'}</span>
+          <span className="screen-detail">{progress ? `${timeLabel(progress.used)} of ${timeLabel(seconds)} used` : canSync ? 'Waiting for today’s usage' : 'Connect screen time to count it'}</span>
+        </> : usageToday ? <>
+          <span className="screen-label">Screen time today</span>
+          <span className="screen-number">{timeLabel(usageToday.seconds)}</span>
+          <button type="button" className="screen-link" onClick={openGoals}>Set a social media limit</button>
+        </> : <>
+          <span className="screen-label">Social media today</span>
+          <span className="screen-detail">{native ? 'Connect screen time and set a limit. Sparky counts it as one habit.' : 'Screen time is counted in the Android app.'}</span>
+        </>}
+        {usageToday && <button type="button" className="screen-link" aria-expanded={details} aria-controls="today-budget-details"
+          onClick={() => setDetails(!details)}>{details ? 'Hide apps' : 'See apps'}</button>}
+        {bar && <span className="sparky-bar">{bar}</span>}
+      </div>
       <div className="inline-sparky">
-        <TurtleAvatar pose={pose} reactionKey={reaction.key} today={today} completed={reaction.todayDone} comeback={reaction.comeback} planned={planned} reset={!!status?.resetDone} />
+        <div className="sparky-stage"><SparkyRing done={ring.done} total={ring.total} />
+          <TurtleAvatar pose={pose} reactionKey={reaction.key} today={today} completed={reaction.todayDone} comeback={reaction.comeback} planned={planned} reset={!!status?.resetDone} /></div>
+        <span className="sparky-name day-count">{ring.total ? `${ring.done} of ${ring.total} done today` : 'Nothing due today'}</span>
       </div>
-      </div>
+    </div>
     {afterCard}
     <div className="budget-coach-main"><div className="budget-coach-copy">
-        {(!children || pose !== 'ready' || paused) && <p className="sparky-headline">{headline}</p>}
+        <p className="sparky-headline">{headline}</p>
         {focus && <p className="sparky-focus">Today's priority · <strong>{focus}</strong></p>}
         <div className="budget-coach-heading"><h2 id="budget-coach-title">{status?.plan.name ?? 'Screen time budget'}</h2>
           <button type="button" className="icon-button" aria-label="Budget coach settings" onClick={() => {
             setError(''); setEditing(true);
           }}><Settings2 size={18} /></button></div>
-        {usageToday ? <button type="button" className="budget-disclosure" aria-expanded={details}
-          aria-controls="today-budget-details" onClick={() => setDetails(!details)}>{progress ? <>
-          <span className="budget-coach-number">{progress.remaining === 0 ? 'At your limit' : `${timeLabel(Math.abs(progress.remaining))} ${over ? 'over' : 'left'}`}</span>
-          <span className="muted">{timeLabel(progress.used)} of {timeLabel(seconds)} used today</span>
-        </> : <>
-          <span className="budget-coach-number">{timeLabel(usageToday.seconds)}</span>
-          <span className="muted">Screen time today</span>
-        </>}{sync.status?.screen?.updated && <span className="sync-age">Updated {timeAgo(sync.status.screen.updated)}</span>}
-        <span className="budget-detail-link">{details ? 'Hide apps' : 'See apps'}</span></button> :
-          <p className="muted">{canSync ? 'Waiting for today’s screen time.' : 'Connect screen time to see today’s usage here.'}</p>}
       </div>
     </div>
     {activeBudgets(data, today).filter(({limit}) => limit.id !== status?.plan.id).map(({limit, change}) => {
@@ -193,8 +183,8 @@ export function BudgetCoach({ data, today, focus, children, afterCard, commit, o
       : 'No habits due today'}{exceeded ? ' · An app limit was exceeded' : progress ? ' · Within this screen time budget' : ''}</p>}
     {!reviewing && reaction.date !== today && yesterdayMissed > 0 && <p className={`budget-coach-message${pose === 'disappointed' ? ' budget-coach-warning' : ''}`}>
       {yesterdayMissed} {yesterdayMissed === 1 ? 'habit' : 'habits'} missed yesterday.</p>}
-    {!reviewing && reaction.date === today && reaction.slightOver && <p className="budget-coach-message">Over an app limit today. Your completed habits still count.</p>}
-    {!reviewing && !reaction.weeklyShort && pose === 'so-so' && reaction.total > 0 && !reaction.slightOver && <p className="budget-coach-message">
+    {!reviewing && reaction.date === today && reaction.overLimit && <p className="budget-coach-message">Over your {reaction.overLimit} limit today. That counts as one missed habit.</p>}
+    {!reviewing && !reaction.weeklyShort && pose === 'so-so' && reaction.total > 0 && <p className="budget-coach-message">
       {reaction.done} of {reaction.total} habits done {reaction.date === today ? 'today' : 'yesterday'}.</p>}
     {!reviewing && pose === 'proud' && !status?.resetDone && reaction.total > 0 && <p className="budget-coach-message">
       All {reaction.total} {reaction.total === 1 ? 'habit' : 'habits'} done {reaction.date === today ? 'today' : 'yesterday'}.</p>}
@@ -211,8 +201,7 @@ export function BudgetCoach({ data, today, focus, children, afterCard, commit, o
         {reaction.bonus > 0 && ` Plus ${reaction.bonus} extra weekly session${reaction.bonus === 1 ? '' : 's'}.`}</p>
       {reaction.missed.length > 0 && <p>Still open · {reaction.missed.map((habit) => habit.title).join(', ')}</p>}
       {reaction.slipped.length > 0 && <p>Slipped (settled) · {reaction.slipped.map((habit) => habit.title).join(', ')}</p>}
-      {reaction.overLimit ? <p>{reaction.overLimit} went more than 10% over its limit.</p> :
-        reaction.slightOver && <p>An app budget went up to 10% over its limit.</p>}
+      {reaction.limitsOver.length > 0 && <p>Over the limit · {reaction.limitsOver.join(', ')}</p>}
       {reaction.todayWeekly.length > 0 && <>
         <h3>Flexible this week</h3>
         <ul>{reaction.todayWeekly.map(({ id, title, count, target, avoid }) => <li key={id}>
@@ -220,7 +209,7 @@ export function BudgetCoach({ data, today, focus, children, afterCard, commit, o
         </li>)}</ul>
         <p>Unfinished weekly goals affect Sparky’s mood at the Sunday evening check.</p>
       </>}
-      <p>All due habits and all budgets met earn a thumbs-up. At least 70% earns so-so on an incomplete day. If you did at least half and only missed one or two part-week habits, that also earns so-so. More than 10% over any app limit earns a head shake. Small wins count as one habit once 70% of them are done.</p>
+      <p>All due habits done earns a thumbs-up. At least 70% earns so-so. If you did at least half and only missed one or two part-week habits, that also earns so-so. Less earns a head shake. Each app limit counts as one habit: done while you stay under it, missed once you go over. Small wins count as one habit once 70% of them are done.</p>
       <p>A minimum or restart counts. Planned rest and unscheduled weekly sessions stay outside the daily total.</p>
     </details>}
     {!paused && reviewing && <EveningSuggestion key={today} data={data} today={today} habit={carryHabit(data, today)} commit={commit} />}

@@ -78,7 +78,16 @@ function habitReview(data: AppData, date: string, weekday: number, weekLogs?: Ap
   const wins = smallWinsAsHabit(data, date);
   if (wins.reached) done++;
   else if (wins.counted) missed.push({ title: `Small wins (${wins.needed} of ${wins.total})`, days: [0, 1, 2, 3, 4, 5, 6] });
-  return { done, total: done + missed.length + slipped.length, missed, slipped, bonus, weekly };
+  // Each app limit counts as one habit once the phone has reported usage: done while under it, missed once over.
+  const usage = data.screenTime?.find((day) => day.date === date);
+  const limitsOver: string[] = [];
+  if (usage) for (const { limit, change } of activeBudgets(data, date)) {
+    const checked = checkAppLimit(limit.id, change.minutes, usage, change.apps);
+    if (!checked) continue;
+    if (checked.state === 'over') limitsOver.push(limit.name);
+    else done++;
+  }
+  return { done, total: done + missed.length + slipped.length + limitsOver.length, missed, slipped, limitsOver, bonus, weekly };
 }
 
 export function turtleHabitProgress(data: AppData, date: string) {
@@ -87,32 +96,24 @@ export function turtleHabitProgress(data: AppData, date: string) {
 }
 
 export function dayReaction(data: AppData, date: string, finished: boolean, weekday = calendarDate(date).getDay(), weekLogs?: AppData['logs']) {
-  const { done, total, missed, slipped, bonus, weekly } = habitReview(data, date, weekday, weekLogs);
+  const { done, total, missed, slipped, limitsOver, bonus, weekly } = habitReview(data, date, weekday, weekLogs);
   const weeklyMet = weekly.filter(({ count, target }) => count >= target).length;
   const weeklyShort = finished && weekday === 0 && weeklyMet < weekly.length;
   const misses = [...missed, ...slipped];
   const budgets = activeBudgets(data, date);
   const usage = data.screenTime?.find((day) => day.date === date);
-  let slightOver = false;
-  let overLimit = '';
-  for (const { limit, change } of budgets) {
-    const checked = checkAppLimit(limit.id, change.minutes, usage, change.apps);
-    if (checked?.state !== 'over') continue;
-    if (-checked.remaining * 10 > change.minutes * 60) overLimit = limit.name;
-    else slightOver = true;
-  }
+  const overLimit = limitsOver[0] ?? '';
   const mostDone = done * 10 >= total * 7;
-  const partWeekAllowance = misses.length > 0 && misses.length <= 2 && done * 2 >= total &&
+  const partWeekAllowance = !limitsOver.length && misses.length > 0 && misses.length <= 2 && done * 2 >= total &&
     misses.every((habit) => habit.weeklyTarget ? habit.weeklyTarget < 7 : habit.days.length < 7);
   const allDone = done === total;
   let pose: TurtlePose | undefined;
   const emptyWeek = weeklyShort && !done && !bonus && weekly.every(({ count }) => count === 0);
-  if (overLimit || emptyWeek || (finished && !mostDone && !partWeekAllowance)) pose = 'disappointed';
-  else if ((slightOver && mostDone) || (finished && !allDone) || weeklyShort) pose = 'so-so';
-  else if (slightOver) pose = 'ready';
+  if (emptyWeek || (finished && !mostDone && !partWeekAllowance)) pose = 'disappointed';
+  else if ((finished && !allDone) || weeklyShort) pose = 'so-so';
   else if (allDone && (total > 0 || bonus > 0 || weeklyMet > 0 || (finished && usage && budgets.length > 0)) && (budgets.length === 0 || usage)) pose = 'proud';
   if (scoringPaused(data, date)) pose = undefined;
-  return { date, done, total, pose, missed, slipped, bonus, weekly, weeklyShort, slightOver, overLimit, partWeekAllowance };
+  return { date, done, total, pose, missed, slipped, limitsOver, bonus, weekly, weeklyShort, overLimit, partWeekAllowance };
 }
 
 /** Hour of day after which Sparky stops showing yesterday's verdict and judges today only. */
@@ -220,12 +221,12 @@ const plural = (count: number, word: string) => `${count} ${word}${count === 1 ?
 export function sparkyTarget(data: AppData, today: string) {
   const day = dayReaction(data, today, true);
   if (scoringPaused(data, today)) return 'Scoring is paused today.';
-  if (day.overLimit) return `You're over your ${day.overLimit} limit, so Sparky can't be proud today. Finishing your habits still helps.`;
   if (day.weeklyShort) return 'It’s the last day of the week. Open weekly goals affect Sparky’s evening mood.';
   if (!day.total) return '';
-  const left = day.total - day.done - day.slipped.length;
-  if (left <= 0 && day.slipped.length) return `Nothing left to do today. ${day.slipped.map(({ title }) => title).join(', ')} slipped, so Sparky can't be proud today, but he counts everything you did.`;
-  if (left > 0 && day.slipped.length) {
+  const settled = [...day.slipped.map(({ title }) => title), ...day.limitsOver.map((name) => `${name} limit`)];
+  const left = day.total - day.done - settled.length;
+  if (left <= 0 && settled.length) return `Nothing left to do today. ${settled.join(', ')} missed, so Sparky can't be proud today, but he counts everything you did.`;
+  if (left > 0 && settled.length) {
     const forSoSo = Math.ceil(day.total * 0.7) - day.done;
     return forSoSo > 0 && forSoSo <= left ? `${plural(forSoSo, 'more habit')} for a so-so Sparky today.` : `${plural(left, 'more habit')} left today.`;
   }
@@ -236,7 +237,6 @@ export function sparkyTarget(data: AppData, today: string) {
       ? `${plural(forSoSo, 'more habit')} for a so-so Sparky, ${left} to make him proud.`
       : `${plural(left, 'more habit')} to make Sparky proud tonight.`) + wins;
   }
-  if (day.slightOver) return 'All habits done. You are a little over an app limit, so Sparky is so-so.';
   return 'All habits done. Sparky is proud of you.';
 }
 
@@ -247,5 +247,8 @@ export function eveningSummary(data: AppData, today: string) {
     livePose: dayReaction(data, today, false).pose ?? 'ready',
     pose: day.pose ?? 'ready', missed: day.missed.slice(0, 4).map((habit) => habit.title), overLimit: day.overLimit,
     /** Habits that can still be done today; a settled slip is not one of them. */
-    open: day.missed.length };
+    open: day.missed.length,
+    /** The watched limit was counted as a done habit, so Android can flip it to missed if the phone goes over later. */
+    limitWithin: (() => { const plan = budgetPlan(data, today); return !!plan && !day.limitsOver.includes(plan.name) &&
+      !!data.screenTime?.some((usage) => usage.date === today); })() };
 }

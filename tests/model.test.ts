@@ -6,7 +6,7 @@ import { coachingSuggestion, dailyCoaching } from '../src/coach.ts';
 import { reminderPlan, unfinishedToday } from '../src/reminders.ts';
 import { applyPhoneCompletions, recoveryFor, weeklyProgress } from '../src/planning.ts';
 import { appLimitForDay, checkAppLimit, countAppLimitDays, saveAppLimit } from '../src/app-limits.ts';
-import { budgetCoachStatus, budgetPlan, dailyTurtleReaction, turtleHabitProgress } from '../src/budget-coach.ts';
+import { budgetCoachStatus, budgetPlan, dailyTurtleReaction, eveningSummary, turtleHabitProgress } from '../src/budget-coach.ts';
 import { freeSlot } from '../src/evening-plan.ts';
 import { turtleMotion } from '../src/turtle-motion.ts';
 
@@ -104,7 +104,7 @@ test('the turtle checks the finished day against the habits scheduled at the tim
   assert.equal(dailyTurtleReaction({ ...data, weeklySessions: [{ habitId: 'project', date: yesterday }] }, today).yesterdayMissed, 2);
 });
 
-test('turtle uses the 70 percent habit cutoff and the 10 percent app overage cutoff', () => {
+test('turtle uses the 70 percent cutoff and counts an app limit as one habit', () => {
   const date = '2026-11-18';
   const next = '2026-11-19';
   const start = starterData(calendarDate(date));
@@ -116,17 +116,20 @@ test('turtle uses the 70 percent habit cutoff and the 10 percent app overage cut
     const baseline = { ...data, screenTime: [{ date, seconds, apps: [{ ...video, seconds }] }] };
     return habits.slice(0, done).reduce((current, habit) => writeLog(current, habit.id, date, { status: 'done', value: 1 }), baseline);
   }
-  assert.equal(dailyTurtleReaction(recorded(7, 11880), date).pose, 'so-so');
-  assert.equal(dailyTurtleReaction(recorded(7, 11881), date).pose, 'disappointed');
-  assert.equal(dailyTurtleReaction(recorded(6, 11880), next).pose, 'disappointed');
-  assert.equal(dailyTurtleReaction(recorded(7, 9000), next).pose, 'so-so');
-  assert.equal(dailyTurtleReaction(recorded(6, 10000), date).pose, 'ready');
-  assert.equal(dailyTurtleReaction(recorded(6, 10000), date, false, true).pose, 'disappointed');
+  // 10 habits plus the app limit, which counts as one more habit: 11 items, so 8 are needed for so-so.
+  assert.deepEqual(turtleHabitProgress(recorded(3, 10000), date), { done: 4, total: 11 }, 'staying under the limit counts as done');
+  assert.deepEqual(turtleHabitProgress(recorded(3, 10801), date), { done: 3, total: 11 }, 'going over counts as missed');
   assert.equal(dailyTurtleReaction(recorded(7, 10000), date, false, true).pose, 'so-so');
+  assert.equal(dailyTurtleReaction(recorded(7, 10801), date, false, true).pose, 'disappointed');
+  assert.equal(dailyTurtleReaction(recorded(10, 13000), date, false, true).pose, 'so-so', 'a big overage is one miss, not an automatic head shake');
+  assert.equal(dailyTurtleReaction(recorded(10, 13000), date).pose, 'ready', 'no verdict before the evening check');
   assert.equal(dailyTurtleReaction(recorded(10, 10000), date, false, true).key, `${date}-review-proud`);
-  assert.equal(dailyTurtleReaction({ ...recorded(10, 10000), screenTime: [] }, date, false, true).pose, 'ready');
   assert.equal(dailyTurtleReaction(recorded(10, 10800), date).pose, 'proud');
-  assert.equal(dailyTurtleReaction(recorded(4, 13000), date, true).pose, 'disappointed');
+  assert.equal(dailyTurtleReaction({ ...recorded(10, 10000), screenTime: [] }, date, false, true).pose, 'ready');
+  assert.equal(dailyTurtleReaction(recorded(6, 10000), next).pose, 'disappointed');
+  assert.equal(dailyTurtleReaction(recorded(7, 10000), next).pose, 'so-so');
+  assert.equal(eveningSummary(recorded(7, 10000), date).limitWithin, true);
+  assert.equal(eveningSummary(recorded(7, 10801), date).limitWithin, false);
 });
 
 test('turtle reactions anticipate, vary their beats, and settle without moving the disappointed paws', () => {
@@ -442,7 +445,7 @@ test('Sparky learns a separate reminder from nearby finish times and adjusts as 
   finish(1, 14, 55);
   finish(2, 15, 0);
   finish(3, 8, 0, 1);
-  assert.equal(time(), undefined);
+  assert.equal(time(), '18:00', 'until a routine is learned Sparky checks once in the late afternoon');
   finish(4, 15, 5);
   assert.equal(time(), '14:30');
   finish(4, 22, 0);
@@ -456,4 +459,19 @@ test('Sparky learns a separate reminder from nearby finish times and adjusts as 
   assert.equal(time(), '17:15');
   habit.learnedLead = undefined;
   assert.equal(time(), '11:00');
+});
+
+test('habits with no reminder of their own learn the usual time by default', () => {
+  const data = starterData(calendarDate('2026-11-01'));
+  const habit = data.habits.find((item) => item.id === 'read')!;
+  const rule = () => reminderPlan(data, '2026-11-23').find((item) => item.id === habit.id && item.kind === 'habit')!;
+  assert.equal(rule().time, '18:00');
+  for (const day of [20, 21, 22]) {
+    const at = new Date(2026, 10, day, 7, 40);
+    data.logs = writeLog(data, habit.id, localDate(at), { status: 'done', value: habit.thresholds!.target }, at).logs;
+  }
+  assert.equal(rule().time, '07:10');
+  assert.equal(rule().message, 'You usually finish this around 07:40.');
+  data.reminderControls = { disabled: true };
+  assert.equal(rule().time, undefined, 'turning reminders off in Settings still silences them');
 });

@@ -161,3 +161,21 @@ button:active:not(:disabled) {filter:brightness(.93)}
 /* Large text on small phones: the date title wraps instead of being cut off. */
 .period-title-text {white-space:normal;text-align:center;line-height:1.2;overflow:visible}
 .chat-answer .report-answer {display:inline-block;margin-top:.4rem;min-height:32px;padding:0;font-size:.8rem;color:var(--muted)}
+/* Today card: social media time on the left, Sparky inside today's ring with the count under him. */
+.daybook-feature .screen-label {display:block;font-size:.83rem;color:#deeadb}
+.daybook-feature .screen-number {display:block;color:#fff;font-size:1.85rem;line-height:1.12;letter-spacing:-.04em;font-weight:650;margin-top:4px;font-variant-numeric:tabular-nums}
+.daybook-feature .screen-detail {display:block;color:#e6edde;font-size:.9rem;margin-top:4px}
+.daybook-feature .screen-link {display:block;background:none;border:0;padding:0;margin-top:8px;min-height:32px;color:#f4f1df;font-size:.85rem;text-decoration:underline;text-underline-offset:3px;box-shadow:none;text-align:start}
+.daybook-feature[data-over] .screen-number {color:#ffb4a2}
+.daybook-feature .inline-sparky {display:grid;justify-items:center;gap:8px}
+.daybook-feature .inline-sparky {width:clamp(112px,34vw,140px)}
+.sparky-stage {position:relative;padding:8px;width:100%;box-sizing:border-box}
+.sparky-stage .budget-turtle {width:100%;height:auto;aspect-ratio:1}
+.sparky-ring {position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sparky-ring-track {fill:none;stroke:rgba(250,248,236,.16);stroke-width:5}
+.sparky-ring-fill {fill:none;stroke:#b9dc8f;stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.3,1,.4,1)}
+.sparky-ring.complete .sparky-ring-fill {stroke:#f2c96b}
+.sparky-ring.complete {filter:drop-shadow(0 0 10px rgba(242,201,107,.35))}
+.sparky-stage .budget-turtle {position:relative}
+.daybook-feature .inline-sparky .day-count {margin:0;text-align:center;font-size:.8rem;font-weight:600;color:#f4f1df}
+@media (prefers-reduced-motion: reduce) {.sparky-ring-fill {transition:none}}

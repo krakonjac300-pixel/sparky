@@ -1,4 +1,3 @@
-import { suggestedReminder } from './reminders.ts';
 import { useId, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Activity, ArrowUpRight, BookOpen, BriefcaseBusiness, Check, ChevronRight, CloudOff,
@@ -18,7 +17,6 @@ import { minutesLabel, periodDates, type Period } from './reports.ts';
 import { TodayPlanning } from './planning-views.tsx';
 import { prioritiesFor, recoveryFor, weekDates, weeklyProgress, type Recovery } from './planning.ts';
 import { HabitTimer } from './habit-timer.tsx';
-import { unfinishedToday } from './reminders.ts';
 import { PhoneActivity } from './phone-activity.tsx';
 import { type PhoneSync } from './phone-sync.ts';
 import { BudgetCoach } from './budget-coach-view.tsx';
@@ -153,12 +151,6 @@ export function Today({ data, date, busy, add, addBreak, log, toggle, timeHabit,
   const due = dueHabits(habits, date, bookings);
   const flexible = habits.filter((habit) => habit.weeklyTarget && !due.includes(habit));
   const { target, minimum, rest, scheduled } = dailyProgress(due, logs);
-  const unfinished = unfinishedToday(data, date).filter((habit) => habit.trackingType !== 'avoid')
-    .sort((first, second) => first.sortOrder - second.sortOrder);
-  const priority = prioritiesFor(data, date).find((item) => unfinished.some((habit) => habit.id === item.habitId));
-  const nextHabit = unfinished.find((habit) => habit.id === priority?.habitId) ?? unfinished[0];
-  const routine = nextHabit && suggestedReminder(data, nextHabit.id, date);
-  const nextTimer = data.habitTimers?.find((timer) => timer.habit.id === nextHabit?.id);
   const focus = prioritiesFor(data, date).map((item) => habits.find((habit) => habit.id === item.habitId)).find(Boolean);
   const pinned = data.programs?.find((item) => item.id === data.pinnedProgramId && item.status === 'active' && item.days.length < item.duration);
   return <>
@@ -208,15 +200,6 @@ export function Today({ data, date, busy, add, addBreak, log, toggle, timeHabit,
       </div>
     </div>
       </>}>
-      {nextHabit && <div className="next-action"><button className="next-habit" type="button" disabled={busy} onClick={() => log(nextHabit)}>
-        <span className="next-habit-label">Up next</span>
-        <span className="next-habit-name">{nextHabit.title}{priority?.cue && <small>{priority.cue}</small>}</span>
-        <ChevronRight size={16} aria-hidden="true" />
-      </button>{routine && <p className="daybook-routine">Usually finished around {routine}.</p>}
-      {nextTimer && <button className="secondary-button" onClick={() => timeHabit(nextHabit, nextTimer.started)}>Open timer</button>}
-      {nextHabit.trackingType === 'minutes' && !nextTimer && <button className="secondary-button" disabled={busy}
-        onClick={() => timeHabit(nextHabit)}>Start {priority?.minimum ? nextHabit.thresholds?.minimum : nextHabit.thresholds?.target} min</button>}
-      {nextHabit.trackingType === 'checkbox' && <button className="secondary-button" disabled={busy} onClick={() => toggle(nextHabit)}>Mark done</button>}</div>}
     </BudgetCoach>
     {data.activeFocus && <button className="secondary-button" onClick={openFocus}>Open saved Focus session</button>}
     <section className={`progress-panel${(data.habitTimers?.length ?? 0) > 0 ? '' : ' progress-quiet'}`} aria-labelledby="progress-title">

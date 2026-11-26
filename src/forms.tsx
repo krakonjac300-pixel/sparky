@@ -47,7 +47,8 @@ export function HabitForm({ initial, breakTitle, categories, habits, suggestedTi
   const [error, setError] = useState('');
   const [removing, setRemoving] = useState(false);
   const [reminder, setReminder] = useState(initial?.reminderTime ?? '');
-  const [lead, setLead] = useState<Habit['learnedLead']>(initial?.learnedLead);
+  // Sparky learns the usual time by default; a habit keeps a fixed time only when one was chosen.
+  const [lead, setLead] = useState<Habit['learnedLead']>(initial?.learnedLead ?? (initial?.reminderTime ? undefined : 30));
   const canLearn = type !== 'avoid' && schedule !== 'once';
   const quantitative = type !== 'checkbox' && type !== 'avoid';
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -175,7 +176,7 @@ export function HabitForm({ initial, breakTitle, categories, habits, suggestedTi
     </fieldset>}
     {canLearn && <label>Habit reminder<select value={lead ?? ''} onChange={(event) =>
       setLead(event.target.value ? Number(event.target.value) as Habit['learnedLead'] : undefined)}>
-      <option value="">Fixed or default time</option>
+      <option value="">At a fixed time</option>
       {[15, 30, 60].map((value) => <option key={value} value={value}>Sparky: {value} min before my usual time</option>)}
     </select>{lead && <small className="field-hint">{learnedReminderText(suggestedTime, lead, reminderControls)}</small>}</label>}
     {(!canLearn || !lead) && <label>{type === 'avoid' ? 'Check-in time' : 'Remind if unfinished at'} <span className="muted">(optional)</span>

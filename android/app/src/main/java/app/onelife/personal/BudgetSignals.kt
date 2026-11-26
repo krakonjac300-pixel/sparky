@@ -13,11 +13,28 @@ internal data class BudgetProgress(val name: String, val limit: Long, val used: 
     val remaining = used?.let { limit - it }
 }
 
-/** Name of the watched budget when it is more than 10% over today, from the latest background screen time read. */
+/** Name of the watched budget when it is over today, from the latest background screen time read. */
 internal fun freshOverLimit(context: Context): String? {
     val budget = BudgetSignals.progress(context) ?: return null
     val used = budget.used ?: return null
-    return if (budget.limit > 0 && used * 10 > budget.limit * 11) budget.name else null
+    return if (budget.limit > 0 && used > budget.limit) budget.name else null
+}
+
+/**
+ * The app limit counts as one habit. When the phone reports going over after Sparky last saved the day,
+ * that habit turns from done into missed and the mood follows the same 70% rule as in the app.
+ */
+internal fun withFreshLimit(summary: JSONObject, fresh: String?): JSONObject {
+    if (fresh == null || summary.optString("overLimit").isNotBlank() || !summary.optBoolean("limitWithin")) return summary
+    val done = summary.optInt("done") - 1
+    val total = summary.optInt("total")
+    val pose = when {
+        total > 0 && done >= total -> "proud"
+        done * 10 >= total * 7 -> "so-so"
+        else -> "disappointed"
+    }
+    return JSONObject(summary.toString()).put("done", done).put("overLimit", fresh).put("limitWithin", false)
+        .put("pose", pose).put("open", summary.optInt("open"))
 }
 
 internal object BudgetSignals {

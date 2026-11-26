@@ -75,7 +75,7 @@ test('a real slip settles the habit: still a miss, but Sparky stops asking to fi
   assert.equal(day.missed.length, 0, 'nothing is still open');
   assert.equal(day.slipped.map(({ title }) => title).join(), 'Eating sweets');
   assert.equal(day.done, day.total - 1, 'the slip still counts as a miss');
-  assert.match(sparkyTarget(data, today), /^Nothing left to do today\. Eating sweets slipped/);
+  assert.match(sparkyTarget(data, today), /^Nothing left to do today\. Eating sweets missed/);
   assert.deepEqual(eveningSummary(data, today).missed, [], 'the evening notification does not list it as open');
   assert.equal(eveningSummary(data, today).open, 0, 'the widget shows nothing left to go');
 });

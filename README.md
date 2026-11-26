@@ -12,7 +12,9 @@ Pick one to three habits. Every evening at 21:00 Sparky checks your day: everyth
 
 ## What it does
 
-- **Today:** your next habit, a one-tap start or timer, and tonight's bar ("Sparky's bar tonight: 3 of 4 by 21:00").
+- **Today:** your social media time against its limit, Sparky inside a ring that fills as you finish habits ("2 of 5 done today"), and tonight's bar ("Sparky's bar tonight: 3 of 4 by 21:00").
+- **App limits count as one habit:** stay under your social media limit and it counts as done; go over and it counts as one miss.
+- **Reminders that learn:** Sparky learns when you usually finish each habit and reminds you a little before, only if it is still open.
 - **Evening check:** a notification at 21:00 with Sparky's verdict, even when the app is closed.
 - **Small wins, check-ins, streaks** with freezes earned by full weeks, and planned rest days that don't count against you.
 - **Focus sessions** that can turn on Do Not Disturb and always turn it off again.

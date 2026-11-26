@@ -4,6 +4,7 @@ import { Dialog } from './forms.tsx';
 import type { AppData, Habit } from './model.ts';
 import { defaultTurtleReviewHour } from './turtle-review.ts';
 import type { Commit } from './expansion.tsx';
+import { androidRequest, onAndroid } from './android.ts';
 
 const seenKey = 'sparky-onboarding-done';
 const starterIds = ['read', 'move', 'meditate', 'learn', 'gratitude', 'reach-out', 'project'];
@@ -43,6 +44,8 @@ export function Onboarding({ data, commit, done }: { data: AppData; commit: Comm
     : [...current, id]);
   const finish = async (ids: string[]) => {
     setSaving(true);
+    // Sparky's reminders and evening check need notifications; ask once while the plan is being set up.
+    if (onAndroid()) await androidRequest('requestNotifications').catch(() => false);
     if (await commit((current) => applyOnboarding(current, ids, targets), 'Your plan is set. Sparky is watching.')) { markOnboarded(); done(); }
     setSaving(false);
   };
@@ -56,6 +59,7 @@ export function Onboarding({ data, commit, done }: { data: AppData; commit: Comm
         <li><strong>Less than that</strong>: disappointed. He means it.</li>
       </ul>
       <p>Small wins count as one more item. Sparky's card shows tonight's exact bar.</p>
+      <p>During the day Sparky learns when you usually finish each habit and reminds you a little before, if it is still open.</p>
       <p className="muted">Today counts too, even if you are starting late. A minimum or restart still counts as done. Sick? Pause scoring in Settings.</p>
       <button className="primary-button" disabled={saving} onClick={() => void finish(chosen)}>Start</button>
     </div>
