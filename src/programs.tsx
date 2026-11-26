@@ -5,6 +5,7 @@ import { newId, type AppData } from './model.ts';
 import { guideKeys, programGuides, programLevels } from './program-guide.ts';
 import { exerciseFor, guideFor } from './program-exercise.ts';
 import { ProgramTips } from './program-tips.tsx';
+import { programCoaching } from './program-coaching.ts';
 
 type Program = NonNullable<AppData['programs']>[number];
 
@@ -101,6 +102,7 @@ export function Programs({ data, today, commit }: { data: AppData; today: string
       const step = exerciseFor(program, today);
       const setStatus = (status: Program['status']) => void update((items) => items.map((item) => item.id === program.id ? { ...item, status } : item), 'Program updated.');
       const pinned = data.pinnedProgramId === program.id;
+      const coaching = guide && programCoaching[guide];
       return <section className="panel settings-panel" key={program.id} id={`program-${program.id}`} tabIndex={-1}>
         <h3>{program.title}</h3>
         {(pinned || (!finished && program.status === 'active')) && <button className="text-button" disabled={busy} onClick={() => {
@@ -116,12 +118,21 @@ export function Programs({ data, today, commit }: { data: AppData; today: string
             <option value="">Automatic starter progression</option>
             {programLevels.map((name, index) => <option key={name} value={index + 1}>{index + 1} · {name}</option>)}
           </select></label>
-          <h4>{programLevels[step.number - 1]}</h4><p>{step.action}</p>
+        </div>}
+        {step && <div className="program-step">
+          <span className="program-step-level">Today’s practice · {programLevels[step.number - 1]}</span>
+          <p className="program-step-action">{step.action}</p>
           {step.easier && <p className="muted">Easier option: {step.easier}</p>}
         </div>}
-        <ProgramTips title={program.title} action={step ? step.action : program.action} />
-        <progress aria-label={`${program.title} progress`} max={program.duration} value={Math.min(days.size, program.duration)} />
-        <p>{Math.min(days.size, program.duration)} of {program.duration} practice days · {finished ? 'Complete' : program.status}</p>
+        {coaching && <details className="program-tips">
+          <summary>Tips that help</summary>
+          <ul>{coaching.tips.map((tip) => <li key={tip}>{tip}</li>)}</ul>
+        </details>}
+        <ProgramTips title={program.title} action={step ? step.action : program.action} question={coaching?.question} />
+        <div className="program-progress">
+          <progress aria-label={`${program.title} progress`} max={program.duration} value={Math.min(days.size, program.duration)} />
+          <p>{Math.min(days.size, program.duration)} of {program.duration} practice days · {finished ? 'Complete' : program.status}</p>
+        </div>
         {!finished && days.size >= Math.ceil(program.duration / 2) && <p>Halfway milestone reached.</p>}
         {linked && <p className="muted">Linked to {linked.title}. Reach its target to count today.</p>}
         {(program.status === 'active' || days.has(today) || entry) && <form className="form-stack" key={`${program.id}:${today}`} onSubmit={(event) => {
@@ -142,8 +153,8 @@ export function Programs({ data, today, commit }: { data: AppData; today: string
             return { ...item, entries, repeatDays, days: add ? [...item.days, today] : item.days };
           }), count ? 'Practice saved.' : 'Reflection saved.');
         }}>
-          <label>What did you do?<textarea name="action" rows={2} maxLength={500} defaultValue={entry?.action} placeholder="For example, I asked a question in a meeting." /></label>
-          <label>What did you learn?<textarea name="reflection" rows={3} maxLength={2000} defaultValue={entry?.reflection} /></label>
+          <label>What did you do?<textarea name="action" rows={3} maxLength={500} defaultValue={entry?.action} placeholder={`For example: ${coaching?.example ?? 'I did a ten-minute version of today’s practice.'}`} /></label>
+          <label>{coaching?.reflect ?? 'What did you learn?'}<textarea name="reflection" rows={3} maxLength={2000} defaultValue={entry?.reflection} /></label>
           {guide && canCount && program.level === undefined && <label className="check-label"><input name="repeat" type="checkbox" /> Count today and keep practicing this step</label>}
           <div className="connection-actions">
             {canCount && <button className="primary-button" value="count" disabled={busy}>Count today</button>}

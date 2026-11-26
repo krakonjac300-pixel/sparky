@@ -32,3 +32,18 @@ test('all starter guides progress in four stages and offer a smaller fallback', 
     assert.equal(choices.at(-1)?.number, 8);
   }
 });
+
+test('every program has its own tips, journal example and ChatGPT question', async () => {
+  const { programCoaching } = await import('../src/program-coaching.ts');
+  const examples = new Set<string>();
+  const questions = new Set<string>();
+  for (const key of guideKeys) {
+    const coaching = programCoaching[key];
+    assert.ok(coaching.tips.length >= 3, `${key} has tips`);
+    examples.add(coaching.example);
+    questions.add(coaching.question);
+  }
+  assert.equal(examples.size, guideKeys.length, 'no two programs share a journal example');
+  assert.equal(questions.size, guideKeys.length, 'no two programs share a ChatGPT question');
+  assert.doesNotMatch(programCoaching.sleep.example + programCoaching.sleep.question, /meeting|awkward/);
+});

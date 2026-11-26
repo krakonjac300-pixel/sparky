@@ -234,9 +234,9 @@ test('program tips use the existing Android coach with only the selected exercis
     await button(page, 'Programs').click();
     assert.equal(await page.getByLabel('Practice difficulty').inputValue(), '8');
     await page.getByLabel('Practice difficulty').selectOption('1');
-    await page.getByLabel('What did you learn?').fill('Private journal example');
+    await page.getByLabel('What did you expect to happen, and what actually happened?').fill('Private journal example');
     await button(page, 'Save notes').click();
-    await button(page, 'Ask ChatGPT for tips').click();
+    await button(page, 'Ask ChatGPT about this step').click();
     const dialog = page.getByRole('dialog');
     await dialog.getByLabel('Your question (optional)').fill('What should I say?');
     await button(dialog, 'Send to ChatGPT').click();
@@ -259,7 +259,7 @@ test('programs and focus history persist and progress cards export a real PNG', 
     await button(page, 'Read regularly').click();
     await button(page, 'Save program').click();
     await page.getByLabel('What did you do?').fill('Read the first chapter');
-    await page.getByLabel('What did you learn?').fill('It helped to put my phone away.');
+    await page.getByLabel('What idea from today’s reading do you want to remember?').fill('It helped to put my phone away.');
     await button(page, 'Count today').click();
     await text(page, '1 of 7 practice days · active');
     await button(page, 'Pause').click();
