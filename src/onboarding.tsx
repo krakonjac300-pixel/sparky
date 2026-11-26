@@ -34,7 +34,7 @@ export function markOnboarded() {
 
 /** First run: choose any number of habits and their targets, then read the evening rule once. */
 export function Onboarding({ data, commit, done }: { data: AppData; commit: Commit; done: () => void }) {
-  const [step, setStep] = useState<'pick' | 'rule'>('pick');
+  const [step, setStep] = useState<'pick' | 'rule' | 'connect'>('pick');
   const [chosen, setChosen] = useState<string[]>([]);
   const [targets, setTargets] = useState<Record<string, number>>(() =>
     Object.fromEntries(data.habits.filter((habit) => habit.thresholds).map((habit) => [habit.id, habit.thresholds!.target])));
@@ -44,11 +44,15 @@ export function Onboarding({ data, commit, done }: { data: AppData; commit: Comm
     : [...current, id]);
   const finish = async (ids: string[]) => {
     setSaving(true);
-    // Sparky's reminders and evening check need notifications; ask once while the plan is being set up.
-    if (onAndroid()) await androidRequest('requestNotifications').catch(() => false);
-    if (await commit((current) => applyOnboarding(current, ids, targets), 'Your plan is set. Sparky is watching.')) { markOnboarded(); done(); }
+    if (await commit((current) => applyOnboarding(current, ids, targets), 'Your plan is set. Sparky is watching.')) {
+      markOnboarded();
+      // On the phone, offer every connection once so new users get the whole app from day one.
+      if (onAndroid()) setStep('connect'); else done();
+    }
     setSaving(false);
   };
+
+  if (step === 'connect') return <ConnectSparky done={done} />;
 
   if (step === 'rule') return <Dialog title="How Sparky holds you to it" close={() => void finish(chosen)}>
     <div className="form-stack onboarding">
@@ -82,6 +86,51 @@ export function Onboarding({ data, commit, done }: { data: AppData; commit: Comm
       <p className="muted" role="status">{chosen.length ? `${chosen.length} chosen` : 'Choose at least one to continue.'}</p>
       <button className="primary-button" disabled={!chosen.length} onClick={() => setStep('rule')}>Continue</button>
       <button className="text-button" onClick={() => { markOnboarded(); done(); }}>Keep all {data.habits.length} starter habits</button>
+    </div>
+  </Dialog>;
+}
+
+type ConnectState = 'idle' | 'busy' | 'on' | 'off';
+const connections = [
+  { id: 'notifications', title: 'Notifications', why: 'Reminders a little before your usual time, only while a habit is still open, and Sparky’s evening check.',
+    run: () => androidRequest<boolean>('requestNotifications') },
+  { id: 'usage', title: 'Screen time', why: 'Lets Sparky count your social media limit as one habit and show today’s time on the Today card.',
+    run: () => androidRequest<boolean>('connectUsage') },
+  { id: 'health', title: 'Health Connect', why: 'Shows your steps and sleep. On Samsung phones, also let Samsung Health share with Health Connect.',
+    run: () => androidRequest<boolean>('connectHealth') },
+  { id: 'chatgpt', title: 'ChatGPT (optional)', why: 'If you have a ChatGPT account, Coach can answer questions about your habits. No account? Just skip this.',
+    run: () => androidRequest<boolean>('chatConnect', '', 300000) },
+] as const;
+
+/** Last first-run screen: ask for each connection once. Every one can be skipped and changed later in Settings. */
+function ConnectSparky({ done }: { done: () => void }) {
+  const [states, setStates] = useState<Record<string, ConnectState>>({});
+  const [note, setNote] = useState('');
+  const busy = Object.values(states).includes('busy');
+  async function connect(item: typeof connections[number]) {
+    setNote('');
+    setStates((current) => ({ ...current, [item.id]: 'busy' }));
+    if (item.id === 'chatgpt') setNote('Finish signing in to ChatGPT in your browser, then come back to Sparky.');
+    let ok = false;
+    try { ok = (await item.run()) !== false; } catch (error) { setNote(error instanceof Error ? error.message : 'That did not connect. You can try again in Settings.'); }
+    setStates((current) => ({ ...current, [item.id]: ok ? 'on' : 'off' }));
+    if (ok && item.id === 'chatgpt') setNote('');
+  }
+  return <Dialog title="Get the most out of Sparky" close={() => { if (!busy) done(); }}>
+    <div className="form-stack onboarding">
+      <p>Sparky works best with these. Allow what you like; you can change any of them later in Settings.</p>
+      <ul className="onboarding-connect">{connections.map((item) => {
+        const state = states[item.id] ?? 'idle';
+        return <li key={item.id}>
+          <div><strong>{item.title}</strong><p className="muted">{item.why}</p></div>
+          {state === 'on' ? <span className="onboarding-connected"><Check size={16} /> Connected</span>
+            : <button type="button" className="secondary-button" disabled={busy} onClick={() => void connect(item)}>
+              {state === 'busy' ? 'Waiting…' : state === 'off' ? 'Try again' : item.id === 'chatgpt' ? 'Connect' : 'Allow'}</button>}
+        </li>;
+      })}</ul>
+      {note && <p className="muted" role="status">{note}</p>}
+      <p className="muted">Your records stay on this phone. Sparky has no server and no account. Only the Coach questions you choose to send go to OpenAI.</p>
+      <button className="primary-button" disabled={busy} onClick={done}>{Object.values(states).some((state) => state === 'on') ? 'Done' : 'Skip for now'}</button>
     </div>
   </Dialog>;
 }

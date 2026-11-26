@@ -71,7 +71,9 @@ const publishPhoneScore = orderedPhoneScores(async () => {
 
 function App() {
   const [data, setData] = useState<AppData>();
-  const [onboardingClosed, setOnboardingClosed] = useState(false);
+  // Decided once when the data first loads, so the last first-run screen stays open after the plan is saved.
+  const [onboarding, setOnboarding] = useState<boolean>();
+  if (data && onboarding === undefined) setOnboarding(needsOnboarding(data));
   const [tab, setTab] = useState<Tab>('Today');
   const [sheets, setSheets] = useState<Modal[]>([]);
   const modal = sheets.at(-1);
@@ -487,7 +489,7 @@ function App() {
       : modal?.type === 'reset' ? 'Reset all data?' : 'Replace your current records?';
 
   return <div className="app-shell">
-    {data && !onboardingClosed && needsOnboarding(data) && <Onboarding data={data} commit={save} done={() => setOnboardingClosed(true)} />}
+    {data && onboarding && <Onboarding data={data} commit={save} done={() => setOnboarding(false)} />}
     <a className="skip-link" href="#main" onClick={event => {
       if (!browserNavigation()) return;
       event.preventDefault();

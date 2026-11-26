@@ -1827,3 +1827,44 @@ test('first run: a new user picks any number of habits with targets, reads the r
     assert.equal(await page.getByRole('dialog', { name: 'Choose what Sparky holds you to' }).count(), 0);
   } finally { await context.close(); }
 });
+
+test('first run on the phone ends by offering every connection, each one skippable', { timeout: 30000 }, async () => {
+  const context = await browser.newContext(phone);
+  try {
+    await context.addInitScript(() => {
+      try { localStorage.removeItem('sparky-onboarding-done'); } catch { /* storage blocked */ }
+      window.calls = [];
+      window.OneLifeAndroid = { postMessage(message) {
+        const { id, action } = JSON.parse(message);
+        window.calls.push(action);
+        const value = action === 'phoneActivity' ? { health: { state: 'off' }, usage: { state: 'off' } }
+          : action === 'phoneHabitActions' ? { open: null } : true;
+        queueMicrotask(() => this.onmessage({ data: JSON.stringify({ id, value }) }));
+      } };
+    });
+    const page = await context.newPage();
+    page.setDefaultTimeout(6000);
+    await page.clock.setFixedTime(new Date(2026, 10, 25, 10, 0));
+    await page.goto(url);
+    const picker = page.getByRole('dialog', { name: 'Choose what Sparky holds you to' });
+    await picker.getByRole('button', { name: 'Read' }).click();
+    await picker.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('dialog', { name: 'How Sparky holds you to it' }).getByRole('button', { name: 'Start' }).click();
+    const connect = page.getByRole('dialog', { name: 'Get the most out of Sparky' });
+    await connect.waitFor();
+    for (const title of ['Notifications', 'Screen time', 'Health Connect', 'ChatGPT (optional)']) await connect.getByText(title, { exact: true }).waitFor();
+    await connect.getByText(/Sparky has no server and no account/).waitFor();
+    assert.equal(await page.evaluate(() => window.calls.includes('requestNotifications')), false, 'nothing is asked before the user taps');
+    await connect.locator('li', { hasText: 'Notifications' }).getByRole('button', { name: 'Allow' }).click();
+    await connect.locator('li', { hasText: 'Notifications' }).getByText('Connected').waitFor();
+    await connect.locator('li', { hasText: 'Health Connect' }).getByRole('button', { name: 'Allow' }).click();
+    await connect.locator('li', { hasText: 'Health Connect' }).getByText('Connected').waitFor();
+    assert.deepEqual(await page.evaluate(() => window.calls.filter((call) => ['requestNotifications', 'connectHealth', 'connectUsage', 'chatConnect'].includes(call))),
+      ['requestNotifications', 'connectHealth'], 'screen time and ChatGPT were skipped');
+    await connect.getByRole('button', { name: 'Done' }).click();
+    await page.getByRole('heading', { name: 'Today’s habits' }).waitFor();
+    await page.reload();
+    await page.getByRole('heading', { name: 'Today’s habits' }).waitFor();
+    assert.equal(await page.getByRole('dialog', { name: 'Get the most out of Sparky' }).count(), 0, 'shown once');
+  } finally { await context.close(); }
+});

@@ -1,6 +1,6 @@
 import { checkAppLimit } from './app-limits.ts';
 import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
-import { Bell, ChevronRight, Settings2 } from 'lucide-react';
+import { Bell, ChevronRight, Footprints, Settings2 } from 'lucide-react';
 import { androidRequest, isAndroidAppPage, onAndroid } from './android.ts';
 import { activeBudgets, budgetCoachStatus, dailyTurtleReaction, sparkyBar, sparkyHistory, sparkyResetHour, sparkyTarget, turtleHabitProgress } from './budget-coach.ts';
 import { type Commit } from './expansion.tsx';
@@ -69,6 +69,7 @@ export function BudgetCoach({ data, today, focus, afterCard, commit, openGoals, 
   const native = onAndroid();
   const usageState = sync.status?.usage.state;
   const usageToday = data.screenTime?.find((day) => day.date === today);
+  const stepsToday = data.steps?.find((day) => day.date === today)?.steps;
   const canSync = usageState === 'connected' || usageState === 'error';
   const status = budgetCoachStatus(data, today);
   const progress = status?.progress;
@@ -147,6 +148,7 @@ export function BudgetCoach({ data, today, focus, afterCard, commit, openGoals, 
         </>}
         {usageToday && <button type="button" className="screen-link" aria-expanded={details} aria-controls="today-budget-details"
           onClick={() => setDetails(!details)}>{details ? 'Hide apps' : 'See apps'}</button>}
+        {stepsToday !== undefined && <span className="card-steps"><Footprints size={15} aria-hidden="true" />{stepsToday.toLocaleString()} steps today</span>}
         {bar && <span className="sparky-bar">{bar}</span>}
       </div>
       <div className="inline-sparky">

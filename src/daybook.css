@@ -192,3 +192,12 @@ button:active:not(:disabled) {filter:brightness(.93)}
 .program-progress progress::-webkit-progress-bar {background:var(--surface-raised);border-radius:4px}
 .program-progress progress::-webkit-progress-value {background:var(--accent);border-radius:4px}
 .program-progress progress::-moz-progress-bar {background:var(--accent);border-radius:4px}
+.onboarding-connect {list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.onboarding-connect li {display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.onboarding-connect li p {margin:2px 0 0;font-size:.88rem}
+.onboarding-connect .secondary-button {flex:none}
+.onboarding-connected {flex:none;display:inline-flex;align-items:center;gap:4px;color:var(--accent-strong,var(--accent));font-weight:600}
+.program-tips summary::after {content:'';margin-inline-start:8px;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .2s}
+.program-tips[open] summary::after {transform:rotate(-135deg) translateY(-2px)}
+@media (prefers-reduced-motion: reduce) {.program-tips summary::after {transition:none}}
+.daybook-feature .card-steps {display:flex;align-items:center;gap:6px;margin-top:8px;color:#e6edde;font-size:.9rem;font-variant-numeric:tabular-nums}
