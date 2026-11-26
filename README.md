@@ -8,6 +8,7 @@ Pick one to three habits. Every evening at 21:00 Sparky checks your day: everyth
   <img src="docs/screenshots/onboarding.png" width="240" alt="Choosing habits on first launch">
   <img src="docs/screenshots/today.png" width="240" alt="Today screen with Sparky's card and tonight's bar">
   <img src="docs/screenshots/history.png" width="240" alt="History with the week strip">
+  <img src="docs/screenshots/programs.png" width="240" alt="A program with its tips">
 </p>
 
 ## What it does
@@ -42,9 +43,17 @@ gradle :app:assembleRelease   # packages dist/ into the APK
 
 The release APK is unsigned; sign it with your own key (`zipalign` then `apksigner sign`).
 
-## Privacy and terms
+## Privacy
 
-See the [privacy policy](docs/privacy.md) and [docs/one-life-terms.md](docs/one-life-terms.md).
+We collect nothing. Sparky has no server, no account, no analytics, no ads and no tracking. Your habits, screen time, steps and sleep stay on your phone, and Android cloud backup is turned off. The only thing that can leave the phone is what you choose to send to ChatGPT through your own OpenAI account, if you use the optional Coach.
+
+Sparky is free because it was made to help people build better habits.
+
+Read the full [privacy policy](docs/privacy.md) and the [terms of use](docs/one-life-terms.md).
+
+## Support
+
+Questions, feedback or a reported Coach answer: sparkyhabits@proton.me
 
 ## License
 
